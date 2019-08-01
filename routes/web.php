@@ -1,4 +1,5 @@
 <?php
+use Illuminate\Routing\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,6 +12,18 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/admin', function () {
+    return redirect('/admin/post');
 });
+
+Route::middleware('auth')->namespace('Admin')->group(function(){
+    Route::resource('admin/post', 'PostController');
+    Route::resource('admin/tag', 'TagController');
+    Route::get('admin/upload',"UploadController@index");
+});
+
+//登陆退出
+Route::get('/login','Auth\LoginController@showLoginFrom')->name('login');
+Route::post('/login','Auth\LoginController@login');
+Route::get('/login','Auth\LoginController@logout')->name('logout');
+

@@ -15,6 +15,7 @@ class PostController extends Controller
     public function index()
     {
         //
+        //dd(2);
         return view('admin.post.index');
     }
 

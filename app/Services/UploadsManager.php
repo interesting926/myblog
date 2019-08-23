@@ -1,23 +1,23 @@
 <?php
+
 namespace App\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Dflydev\ApacheMimeTypes\PhpRepository;
 
-
-class UploadManager
+class UploadsManager
 {
     protected $disk;
-    protected $mineDetect;
+    protected $mimeDetect;
 
-    public function __construct(PhpRepository $mineDetect)
+    public function __construct(PhpRepository $mimeDetect)
     {
-        $this->disk = Storage::disk(config('blog.upload.stroage'));
-        $this->mineDetect = $mineDetect;
+        $this->disk = Storage::disk(config('blog.uploads.storage'));
+        $this->mimeDetect = $mimeDetect;
     }
 
-        /**
+    /**
      * Return files and directories within a folder
      *
      * @param string $folder
@@ -31,49 +31,60 @@ class UploadManager
      */
     public function folderInfo($folder)
     {
-        $folder =$this->cleanFolder($folder);
+        $folder = $this->cleanFolder($folder);
 
         $breadcrumbs = $this->breadcrumbs($folder);
-        $slice = array_slice($breadcrumbs,-1);
-        $foldername = current($slice);
-        $breadcrumbs = array_slice($breadcrumbs,0,-1);
+        $slice = array_slice($breadcrumbs, -1);
+        $folderName = current($slice);
+        $breadcrumbs = array_slice($breadcrumbs, 0, -1);
 
         $subfolders = [];
-        foreach(array_unique($this->disk->directories($folder)) as $folder){
-            $subfolders["/$subfolders"] = basename($subfolders);
+        foreach (array_unique($this->disk->directories($folder)) as $subfolder) {
+            $subfolders["/$subfolder"] = basename($subfolder);
         }
 
         $files = [];
-        foreach($this->disk->files($folder) as $path){
-            $files[] = $this ->fileDetails($path);
+        foreach ($this->disk->files($folder) as $path) {
+            $files[] = $this->fileDetails($path);
         }
 
-        return cpmpact(
+        return compact(
             'folder',
             'folderName',
             'breadcrumbs',
             'subfolders',
             'files'
         );
-
     }
 
+    /**
+     * Sanitize the folder name
+     */
+    protected function cleanFolder($folder)
+    {
+        return '/' . trim(str_replace('..', '', $folder), '/');
+    }
+
+    /**
+     * 返回当前目录路径
+     */
     protected function breadcrumbs($folder)
     {
-        $folder = trim($folder,'/');
-        $crumbs = ['/' =>'root'];
+        $folder = trim($folder, '/');
+        $crumbs = ['/' => 'root'];
 
-        if(empty($folder)){
+        if (empty($folder)) {
             return $crumbs;
         }
 
-        $folders = explode('/',$folder);
+        $folders = explode('/', $folder);
         $build = '';
-        foreach($folders as $folder)
-        {
+        foreach ($folders as $folder) {
             $build .= '/' . $folder;
             $crumbs[$build] = $folder;
         }
+
+        return $crumbs;
     }
 
     /**
@@ -129,5 +140,4 @@ class UploadManager
             $this->disk->lastModified($path)
         );
     }
-
 }

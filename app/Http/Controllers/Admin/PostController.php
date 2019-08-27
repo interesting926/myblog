@@ -32,7 +32,7 @@ class PostController extends Controller
      */
     public function index()
     {
-       // dd(Post::all());
+        //dd(Post::all());
         return view('admin.post.index',['posts'=>Post::all()]);
     }
 

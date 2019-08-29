@@ -7,16 +7,16 @@ use Michelf\SmartyPants;
 
 class Markdowner
 {
-    public function toHtml($text)
+    public function toHTML($text)
     {
         $text = $this->preTransformText($text);
-        $text = MarkdownExtra::defaultransForm($text);
-        $text = SmartyPants::defaultTransFrom($text);
-        $text = $this->postTransFromText($text);
+        $text = MarkdownExtra::defaultTransform($text);
+        $text = SmartyPants::defaultTransform($text);
+        $text = $this->postTransformText($text);
         return $text;
     }
 
-    protected function pretransFromText($text)
+    protected function preTransformText($text)
     {
         return $text;
     }
@@ -25,6 +25,5 @@ class Markdowner
     {
         return $text;
     }
-
-
 }
+

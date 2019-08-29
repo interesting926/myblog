@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use App\Services\Markdowner;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class post extends Model
 {
     //
-    protected $data = ['published_at'];
+    protected $dates = ['published_at'];
     protected $fillable = [
-        'title', 'subtitle', 'content_raw', 'page_image', 'meta_description','layout', 'is_draft', 'published_at',
+        'title', 'subtitle', 'content_raw', 'page_image', 'meta_description', 'layout', 'is_draft', 'published_at',
     ];
 
     /**
@@ -110,5 +111,81 @@ class post extends Model
     public function getContentAttribute($value)
     {
         return $this->content_raw;
+    }
+
+ /**
+     * Return URL to post
+     *
+     * @param Tag $tag
+     * @return string
+     */
+    public function url(Tag $tag = null)
+    {
+        $url = url('blog/' . $this->slug);
+        if ($tag) {
+            $url .= '?tag=' . urlencode($tag->tag);
+        }
+
+        return $url;
+    }
+
+    /**
+     * Return array of tag links
+     *
+     * @param string $base
+     * @return array
+     */
+    public function tagLinks($base = '/blog?tag=%TAG%')
+    {
+        $tags = $this->tags()->get()->pluck('tag')->all();
+        $return = [];
+        foreach ($tags as $tag) {
+            $url = str_replace('%TAG%', urlencode($tag), $base);
+            $return[] = '<a href="' . $url . '">' . e($tag) . '</a>';
+        }
+        return $return;
+    }
+
+    /**
+     * Return next post after this one or null
+     *
+     * @param Tag $tag
+     * @return Post
+     */
+    public function newerPost(Tag $tag = null)
+    {
+        $query =
+            static::where('published_at', '>', $this->published_at)
+                ->where('published_at', '<=', Carbon::now())
+                ->where('is_draft', 0)
+                ->orderBy('published_at', 'asc');
+        if ($tag) {
+            $query = $query->whereHas('tags', function ($q) use ($tag) {
+                $q->where('tag', '=', $tag->tag);
+            });
+        }
+
+        return $query->first();
+    }
+
+    /**
+     * Return older post before this one or null
+     *
+     * @param Tag $tag
+     * @return Post
+     */
+    public function olderPost(Tag $tag = null)
+    {
+        $query =
+            static::where('published_at', '<', $this->published_at)
+                ->where('is_draft', 0)
+                ->orderBy('published_at', 'desc');
+        if ($tag) {
+            $query = $query->whereHas('tags', function ($q) use ($tag) {
+                $q->where('tag', '=', $tag->tag);
+            });
+        }
+
+        return $query->first();
     }
 }
